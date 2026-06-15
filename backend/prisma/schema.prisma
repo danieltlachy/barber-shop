@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int          @id @default(autoincrement())
+  name          String
+  email         String       @unique
+  phone         String?
+  password_hash String
+  created_at    DateTime     @default(now())
+  appointments  Appointment[]
+  google_tokens GoogleToken[]
+}
+
+model Barber {
+  id           Int           @id @default(autoincrement())
+  name         String
+  email        String?       @unique
+  phone        String?
+  created_at   DateTime      @default(now())
+  appointments Appointment[]
+}
+
+model Service {
+  id              Int           @id @default(autoincrement())
+  name            String
+  price           Float
+  durationMinutes Int
+  appointments    Appointment[]
+}
+
+model AppointmentStatus {
+  id   Int           @id @default(autoincrement())
+  name String        @unique
+  appointments Appointment[]
+}
+
+model Appointment {
+  id              Int                @id @default(autoincrement())
+  user            User               @relation(fields: [userId], references: [id])
+  userId          Int
+  barber          Barber?            @relation(fields: [barberId], references: [id])
+  barberId        Int?
+  service         Service            @relation(fields: [serviceId], references: [id])
+  serviceId       Int
+  appointmentDate DateTime
+  status          AppointmentStatus  @relation(fields: [statusId], references: [id])
+  statusId        Int
+  created_at      DateTime           @default(now())
+  notifications   Notification[]
+}
+
+model NotificationType {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  notifications Notification[]
+}
+
+model NotificationStatus {
+  id            Int            @id @default(autoincrement())
+  name          String         @unique
+  notifications Notification[]
+}
+
+model Notification {
+  id            Int                 @id @default(autoincrement())
+  appointment   Appointment?        @relation(fields: [appointmentId], references: [id])
+  appointmentId Int?
+  message       String
+  type          NotificationType    @relation(fields: [typeId], references: [id])
+  typeId        Int
+  status        NotificationStatus  @relation(fields: [statusId], references: [id])
+  statusId      Int
+  sent_at       DateTime?
+  created_at    DateTime            @default(now())
+}
+
+model GoogleToken {
+  id           Int      @id @default(autoincrement())
+  user         User     @relation(fields: [userId], references: [id])
+  userId       Int
+  access_token String
+  refresh_token String?
+  expiry_date   DateTime?
+  created_at    DateTime @default(now())
+}
